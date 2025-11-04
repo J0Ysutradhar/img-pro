@@ -1,7 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { GoogleGenAI, Modality } from "@google/genai";
 import { UploadIcon } from './icons/UploadIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { ResizeIcon } from './icons/ResizeIcon';
+import { MagicWandIcon } from './icons/MagicWandIcon';
 
 const ImageResizer: React.FC = () => {
     const [originalImage, setOriginalImage] = useState<File | null>(null);
@@ -10,6 +12,7 @@ const ImageResizer: React.FC = () => {
     const [width, setWidth] = useState<string>('');
     const [height, setHeight] = useState<string>('');
     const [isResizing, setIsResizing] = useState<boolean>(false);
+    const [isRemovingBackground, setIsRemovingBackground] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,6 +27,72 @@ const ImageResizer: React.FC = () => {
             setOriginalImage(file);
             setResizedImageUrl(null);
             setOriginalImageUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const base64String = (reader.result as string).split(',')[1];
+                resolve(base64String);
+            };
+            reader.onerror = error => reject(error);
+        });
+    };
+
+    const handleRemoveBackground = async () => {
+        if (!originalImage) {
+            setError('Please upload an image first.');
+            return;
+        }
+
+        setIsRemovingBackground(true);
+        setError(null);
+
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const base64Data = await fileToBase64(originalImage);
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash-image',
+                contents: {
+                    parts: [
+                        {
+                            inlineData: {
+                                data: base64Data,
+                                mimeType: originalImage.type,
+                            },
+                        },
+                        {
+                            text: 'remove the background, making it transparent. The main subject should be preserved perfectly.',
+                        },
+                    ],
+                },
+                config: {
+                    responseModalities: [Modality.IMAGE],
+                },
+            });
+
+            const imagePart = response.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
+            if (imagePart && imagePart.inlineData) {
+                const newBase64Data = imagePart.inlineData.data;
+                const newMimeType = imagePart.inlineData.mimeType;
+                const newImageUrl = `data:${newMimeType};base64,${newBase64Data}`;
+                
+                setOriginalImageUrl(newImageUrl);
+                setResizedImageUrl(null);
+            } else {
+                throw new Error('Background removal failed. No image was returned from the API.');
+            }
+
+        } catch (err) {
+            console.error(err);
+            const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setError(`Failed to remove background: ${errorMessage}`);
+        } finally {
+            setIsRemovingBackground(false);
         }
     };
 
@@ -90,7 +159,7 @@ const ImageResizer: React.FC = () => {
                     Resize Your Image Instantly
                 </h1>
                 <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                    Upload your image, set your desired dimensions, and download with perfect quality.
+                    Upload your image, remove the background, set dimensions, and download with perfect quality.
                 </p>
             </div>
             
@@ -115,7 +184,27 @@ const ImageResizer: React.FC = () => {
                     
                     {originalImage && (
                         <div className="space-y-4 animate-fade-in">
-                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Resizing Options</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Editing Options</h3>
+                            <button
+                                onClick={handleRemoveBackground}
+                                disabled={isRemovingBackground || isResizing}
+                                className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-800"
+                            >
+                                {isRemovingBackground ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Removing Background...
+                                    </>
+                                ) : (
+                                    <>
+                                        <MagicWandIcon className="w-5 h-5" />
+                                        Remove Background
+                                    </>
+                                )}
+                            </button>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <input
                                     type="number"
@@ -140,7 +229,7 @@ const ImageResizer: React.FC = () => {
                             </button>
                             <button
                                 onClick={handleResize}
-                                disabled={isResizing || !width || !height}
+                                disabled={isResizing || isRemovingBackground || !width || !height}
                                 className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
                             >
                                 {isResizing ? (
@@ -164,7 +253,7 @@ const ImageResizer: React.FC = () => {
 
                 {/* Right Panel: Previews */}
                 <div className="flex flex-col gap-8">
-                    <ImagePreview title="Original Image" imageUrl={originalImageUrl} fileName={originalImage?.name}/>
+                    <ImagePreview title="Image Preview" imageUrl={originalImageUrl} fileName={originalImage?.name}/>
                     <ImagePreview title="Resized Image" imageUrl={resizedImageUrl} isDownloadable={true} onDownload={handleDownload}/>
                 </div>
             </div>
