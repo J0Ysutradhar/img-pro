@@ -1,0 +1,5 @@
+{
+  "name": "Img Pro",
+  "description": "An interactive and stylish image resizer that allows users to resize images to custom dimensions or use predefined templates like the Bangladeshi passport photo. Users can download the resized images in high quality. The app is fully responsive and requires no login.",
+  "requestFramePermissions": []
+}
