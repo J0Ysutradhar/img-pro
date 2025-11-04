@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { UploadIcon } from './icons/UploadIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
@@ -53,8 +52,8 @@ const ImageResizer: React.FC = () => {
             canvas.height = numHeight;
             const ctx = canvas.getContext('2d');
             if (ctx) {
+                ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(img, 0, 0, numWidth, numHeight);
-                // Use image/png for highest quality and transparency support
                 const dataUrl = canvas.toDataURL('image/png', 1.0);
                 setResizedImageUrl(dataUrl);
             } else {
@@ -80,8 +79,6 @@ const ImageResizer: React.FC = () => {
     };
 
     const setPassportSize = () => {
-        // Standard Bangladeshi passport photo size: 45mm x 55mm.
-        // At 300 DPI, this is approximately 531 x 650 pixels.
         setWidth('531');
         setHeight('650');
     };
@@ -89,62 +86,62 @@ const ImageResizer: React.FC = () => {
     return (
         <div className="space-y-8 animate-fade-in-up">
             <div className="text-center">
-                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
+                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-400">
                     Resize Your Image Instantly
                 </h1>
-                <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
+                <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
                     Upload your image, set your desired dimensions, and download with perfect quality.
                 </p>
             </div>
             
-            {error && <div className="bg-red-500/20 text-red-300 p-3 rounded-lg text-center transition-all duration-300">{error}</div>}
+            {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative text-center transition-all duration-300" role="alert">{error}</div>}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Left Panel: Upload & Controls */}
-                <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 space-y-6 shadow-lg">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-6 shadow-md">
                     <div 
-                      className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-indigo-500 hover:bg-slate-800 transition-all duration-300"
+                      className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-300"
                       onClick={() => fileInputRef.current?.click()}
                     >
                         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                         <div className="flex flex-col items-center justify-center space-y-4">
-                            <UploadIcon className="w-12 h-12 text-slate-500" />
-                            <p className="text-slate-400">
-                                <span className="font-semibold text-indigo-400">Click to upload</span> or drag and drop
+                            <UploadIcon className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+                            <p className="text-gray-500 dark:text-gray-400">
+                                <span className="font-semibold text-blue-600 dark:text-blue-400">Click to upload</span> or drag and drop
                             </p>
-                            <p className="text-xs text-slate-500">Any image format (PNG, JPG, GIF, etc.)</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">Any image format (PNG, JPG, GIF, etc.)</p>
                         </div>
                     </div>
                     
                     {originalImage && (
                         <div className="space-y-4 animate-fade-in">
-                            <h3 className="text-lg font-semibold text-slate-300">Resizing Options</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Resizing Options</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <input
                                     type="number"
                                     placeholder="Width (px)"
                                     value={width}
                                     onChange={(e) => setWidth(e.target.value)}
-                                    className="w-full bg-slate-700/50 border border-slate-600 rounded-md p-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                                 />
                                 <input
                                     type="number"
                                     placeholder="Height (px)"
                                     value={height}
                                     onChange={(e) => setHeight(e.target.value)}
-                                    className="w-full bg-slate-700/50 border border-slate-600 rounded-md p-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                    className="w-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                                 />
                             </div>
                             <button 
                                 onClick={setPassportSize} 
-                                className="w-full text-sm bg-slate-700 text-indigo-300 py-2 rounded-md hover:bg-slate-600 transition-all duration-300 transform hover:scale-105"
+                                className="w-full text-sm bg-gray-200 dark:bg-gray-700 text-blue-600 dark:text-blue-300 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105"
                             >
                                 Use Bangladeshi Passport Photo Template (531x650)
                             </button>
                             <button
                                 onClick={handleResize}
                                 disabled={isResizing || !width || !height}
-                                className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
                             >
                                 {isResizing ? (
                                     <>
@@ -185,24 +182,24 @@ interface ImagePreviewProps {
 
 const ImagePreview: React.FC<ImagePreviewProps> = ({ title, imageUrl, fileName, isDownloadable = false, onDownload }) => {
     return (
-        <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 flex-1 flex flex-col shadow-lg">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 flex-1 flex flex-col shadow-md">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-slate-300">{title}</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{title}</h3>
                 {isDownloadable && imageUrl && (
-                    <button onClick={onDownload} className="flex items-center gap-2 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 text-sm">
+                    <button onClick={onDownload} className="flex items-center gap-2 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 text-sm focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800">
                         <DownloadIcon className="w-4 h-4"/>
                         Download
                     </button>
                 )}
             </div>
-            <div className="flex-1 flex items-center justify-center bg-slate-900/50 rounded-lg min-h-[200px] overflow-hidden">
+            <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-gray-900/50 rounded-lg min-h-[200px] overflow-hidden">
                 {imageUrl ? (
                     <div className="p-4 animate-fade-in w-full text-center">
                         <img src={imageUrl} alt={title} className="max-w-full max-h-64 mx-auto object-contain rounded-md shadow-md" />
-                        {fileName && <p className="text-xs text-slate-500 mt-2 truncate">{fileName}</p>}
+                        {fileName && <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 truncate">{fileName}</p>}
                     </div>
                 ) : (
-                    <p className="text-slate-500">Image preview will appear here</p>
+                    <p className="text-gray-500 dark:text-gray-400">Image preview will appear here</p>
                 )}
             </div>
         </div>
